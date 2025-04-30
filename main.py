@@ -1,11 +1,33 @@
 import pymupdf
 import sys
+import os
+from dotenv import load_dotenv
 
 def extract_pages_from_pdf(master_document, page_num_start, page_num_end):
     # Create a new PDF document and insert the specified pages from the master document
     new_pdf = pymupdf.open()
     new_pdf.insert_pdf(master_document, from_page=page_num_start, to_page=page_num_end)
     return new_pdf
+
+def save_pdf_file(new_pdf, file_name):
+    output_dir = os.getenv("OUTPUT_DIR")
+    os.chdir(output_dir)
+    new_pdf.save(f'{file_name}.pdf')
+    new_pdf.close()
+    os.chdir("..")
+
+def load_environment_variables():
+    # Load environment variables from .env file
+    load_dotenv()
+    input_dir = os.getenv("INPUT_DIR")
+    output_dir = os.getenv("OUTPUT_DIR")
+
+    if input_dir and output_dir:
+        return 'Input and output directories are set.'
+    else:
+        raise EnvironmentError("Environment variables INVOICE_DIR and OUTPUT_DIR are not set.")
+
+
 
 def process_master_pdf(master_pdf_path):
     """Process the master PDF file and extract individual invoices as separate PDF files."""
@@ -34,8 +56,8 @@ def process_master_pdf(master_pdf_path):
         else:
             # Save page/s as new PDF file and reset from_page and to_page indices
             new_pdf = extract_pages_from_pdf(master_document, from_page_index, to_page_index)
-            new_pdf.save(f'{curr_page_invoice_num}.pdf')
-            new_pdf.close()
+            save_pdf_file(new_pdf, curr_page_invoice_num)
+
             
             # Reset the from_page_index and to_page_index for the next invoice
             from_page_index = curr_page_index + 1
@@ -53,22 +75,24 @@ def get_invoice_num_from_page(page):
     
     return invoice_number
 
-def main():
-    args = sys.argv[1:] 
+def are_environment_variables_set():
+    # Check if the required environment variables are set
+    return os.getenv("INVOICE_DIR") is not None and os.getenv("OUTPUT_DIR") is not None
 
-    if len(args) > 0:
-        # Check if the first argument is a valid PDF file
-        master_pdf_path = args[0]
-        try:
-            # Attempt to open the PDF file to check if it exists and is valid
-            with pymupdf.open(master_pdf_path) as _:
-                pass
-            process_master_pdf(master_pdf_path)
-        except Exception as e:
-            print(f"Error: {e}")
-            print("Please provide a valid PDF file.")
-    else:
-        print("No arguments provided.")
+def main():
+    # Load environment variables from .env file
+    load_environment_variables()
+    input_dir = os.getenv("INPUT_DIR")
+    os.mkdir(os.getenv("OUTPUT_DIR"))
+    
+    try:
+        # Attempt to open the PDF file to check if it exists and is valid
+        with pymupdf.open(input_dir) as _:
+            pass
+        process_master_pdf(input_dir)
+    except Exception as e:
+        print(f"Error: {e}")
+        print("Please provide a valid PDF file.")
 
 if __name__ == "__main__":
     main()
@@ -77,7 +101,6 @@ if __name__ == "__main__":
 
 """
 TO DO:
-# It should be able to handle invoices that contain multiple pages. (Consider 2 pointer approach + "seen set")
 # It should be able to give an option of where to save the new PDF files.
 # Determine that an executable can be created from this script using PyInstaller or similar tools.
 
@@ -91,4 +114,8 @@ Master invoices document is empty or does not exist.
 Master Invoice document is not a valid PDF file.
 Invoice number is not found or cannot be extracted from the page.
 Master invoice document is 1 page long.
+
+
+DONE:
+# It should be able to handle invoices that contain multiple pages. (Consider 2 pointer approach + "seen set")
 """
