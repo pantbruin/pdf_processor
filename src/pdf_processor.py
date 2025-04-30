@@ -1,7 +1,6 @@
 import pymupdf
 import sys
 import os
-from dotenv import load_dotenv
 
 def extract_pages_from_pdf(master_document, page_num_start, page_num_end):
     # Create a new PDF document and insert the specified pages from the master document
@@ -15,19 +14,6 @@ def save_pdf_file(new_pdf, file_name):
     new_pdf.save(f'{file_name}.pdf')
     new_pdf.close()
     os.chdir("..")
-
-def load_environment_variables():
-    # Load environment variables from .env file
-    load_dotenv()
-    input_dir = os.getenv("INPUT_DIR")
-    output_dir = os.getenv("OUTPUT_DIR")
-
-    if input_dir and output_dir:
-        return 'Input and output directories are set.'
-    else:
-        raise EnvironmentError("Environment variables INVOICE_DIR and OUTPUT_DIR are not set.")
-
-
 
 def process_master_pdf(master_pdf_path):
     """Process the master PDF file and extract individual invoices as separate PDF files."""
@@ -80,15 +66,14 @@ def are_environment_variables_set():
     return os.getenv("INVOICE_DIR") is not None and os.getenv("OUTPUT_DIR") is not None
 
 def main():
-    # Load environment variables from .env file
-    load_environment_variables()
     input_dir = os.getenv("INPUT_DIR")
-    os.mkdir(os.getenv("OUTPUT_DIR"))
+    output_dir = os.getenv("OUTPUT_DIR")
     
     try:
         # Attempt to open the PDF file to check if it exists and is valid
         with pymupdf.open(input_dir) as _:
             pass
+        os.mkdir(output_dir)
         process_master_pdf(input_dir)
     except Exception as e:
         print(f"Error: {e}")
