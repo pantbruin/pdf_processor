@@ -1,2 +1,9 @@
 .vscode/
 *.pdf
+.env
+*.pyc
+SampleData/
+*.exe
+*.spec
+build/
+dist/

@@ -1,35 +1,40 @@
 import pymupdf
-import sys
 import os
 
-def extract_pages_from_pdf(master_document, page_num_start, page_num_end):
-    # Create a new PDF document and insert the specified pages from the master document
+def extract_pages_from_pdf(input_pdf: pymupdf.Document, page_num_start: int, page_num_end: int) -> pymupdf.Document:
+    """
+    Extract the specified pages from the input PDF and return a new PDF document. page_num_end inclusive.
+    """
     new_pdf = pymupdf.open()
-    new_pdf.insert_pdf(master_document, from_page=page_num_start, to_page=page_num_end)
+    new_pdf.insert_pdf(input_pdf, from_page=page_num_start, to_page=page_num_end)
     return new_pdf
 
-def save_pdf_file(new_pdf, file_name):
+def save_pdf_file(pdf: pymupdf.Document, file_name: str) -> None:
     output_dir = os.getenv("OUTPUT_DIR")
-    new_pdf.save(f'{output_dir}/{file_name}.pdf')
-    new_pdf.close()
+    pdf.save(f'{output_dir}/{file_name}.pdf')
+    pdf.close()
+    return None
 
-def process_master_pdf(master_pdf_path):
+def process_input_pdf():
     """Process the master PDF file and extract individual invoices as separate PDF files."""
     # Open the master PDF invoice file
-    master_document = pymupdf.open(master_pdf_path)
+    input_pdf_path = os.getenv("INPUT_PATH")
+    input_invoices_pdf = pymupdf.open(input_pdf_path)
 
     seen_invoice_nums = set()
+
+    # Extraction range variables
+    # These variables will be used to track the start and end of the page range for each invoice
     from_page_index = 0
     to_page_index = 0
 
-    for curr_page_index in range(len(master_document)):
+    for curr_page_index in range(len(input_invoices_pdf)):
         # Get the invoice number for the current page and the next page
-        curr_page_invoice_num = get_invoice_num_from_page(master_document[curr_page_index])
-        next_page_invoice_num = get_invoice_num_from_page(master_document[curr_page_index + 1]) if curr_page_index + 1 < len(master_document) else None
+        curr_page_invoice_num = get_invoice_num_from_page(input_invoices_pdf[curr_page_index])
+        next_page_invoice_num = get_invoice_num_from_page(input_invoices_pdf[curr_page_index + 1]) if curr_page_index + 1 < len(input_invoices_pdf) else None
 
-        # If the current page's invoice number is equal to the next page's index number, continue to the next page
+        # If the current page's and next page's invoice numbers are equal, set up or update the range of pages to extract
         if curr_page_invoice_num == next_page_invoice_num:
-            print(f"Page {curr_page_index} has the same invoice number as the next page. Continuing to next page.")
             if curr_page_invoice_num in seen_invoice_nums:
                 # If the invoice number has already been seen, only increment to_page_index
                 to_page_index += 1
@@ -39,15 +44,15 @@ def process_master_pdf(master_pdf_path):
                 seen_invoice_nums.add(curr_page_invoice_num)
         else:
             # Save page/s as new PDF file and reset from_page and to_page indices
-            new_pdf = extract_pages_from_pdf(master_document, from_page_index, to_page_index)
+            new_pdf = extract_pages_from_pdf(input_invoices_pdf, from_page_index, to_page_index)
             save_pdf_file(new_pdf, curr_page_invoice_num)
 
             
-            # Reset the from_page_index and to_page_index for the next invoice
+            # Reset the extraction range variables for the next invoice
             from_page_index = curr_page_index + 1
             to_page_index = curr_page_index + 1
 
-    master_document.close()
+    input_invoices_pdf.close()
 
 
 def get_invoice_num_from_page(page):
@@ -60,8 +65,7 @@ def get_invoice_num_from_page(page):
     return invoice_number
 
 def main():
-    input_path = os.getenv("INPUT_PATH")
-    process_master_pdf(input_path)
+    process_input_pdf()
 
 
 if __name__ == "__main__":

@@ -26,15 +26,21 @@ def are_env_variables_set():
 def input_path_is_valid():
     input_path = os.getenv("INPUT_PATH")
     # 1) Check that the input path exists and is a file
-    if not os.path.exists(input_path) or not os.path.isfile(input_path):
-        print(f"ERROR: The input path '{input_path}' does not exist or is not a file.")
-        return False
+
+    p = Path(f'{input_path}')
+
+    # If the .pdf doesn't exist or is not a file, exit with an error message
+    if not p.exists():
+        print(f"ERROR: The input path '{input_path}' does not exist.")
+        sys.exit(1)
+    if not p.is_file():
+        print(f"ERROR: The input path '{input_path}' is not a file.")
+        sys.exit(1)
 
     # 2) Try opening it as a PDF
     try:
         doc = pymupdf.open(str(input_path), filetype="pdf")
         doc.close()
-        return True
     except Exception:
             print(f"ERROR: Could not open the input file '{input_path}' as a PDF.")
             print("Please check the file format and try again.")
@@ -65,5 +71,12 @@ def verify_output_path() -> Path:
         sys.exit(f"ERROR: Output path {p!r} exists but is not a directory.")
 
     #set environment variable to the new path
-    os.environ["OUTPUT_DIR"] = p.resolve()
+    os.environ["OUTPUT_DIR"] = str(p.resolve())
     return p
+
+
+def main():
+    # Check environment variables
+    are_env_variables_set()
+    input_path_is_valid()
+    verify_output_path()
