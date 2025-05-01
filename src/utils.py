@@ -1,6 +1,7 @@
 import os
 import sys
 import pymupdf
+from pathlib import Path
 
 def are_env_variables_set():
     """
@@ -41,24 +42,28 @@ def input_path_is_valid():
             sys.exit(1)
 
 
-
-
-def are_env_variables_valid():
+def verify_output_path() -> Path:
     """
-    Check if the environment variables are valid.
-    
-    Returns:
-        bool: True if all environment variables are valid, False otherwise.
+    Ensure the given path
+     - exists (or can be created),
+     - is a directory,
+     Returns a Path object on success or exits the program with an error.
     """
-    input_dir = os.getenv("INPUT_DIR")
-    output_dir = os.getenv("OUTPUT_DIR")
+    output_path = os.getenv("OUTPUT_DIR")
+    p = Path(f'{output_path}/ProcessedInvoices/')
 
-    if not os.path.isdir(input_dir):
-        print(f"Input directory '{input_dir}' does not exist or is not a directory.")
-        return False
+    # 1) If it doesn’t exist, try to create it (mkdir -p behavior)
+    if not p.exists():
+        try:
+            p.mkdir(parents=True, exist_ok=True)
+            print(f"INFO: Created output directory {p.resolve()}.")
+        except Exception as e:
+            sys.exit(f"ERROR: Could not create output directory {p!r}: {e}")
 
-    if not os.path.isdir(output_dir):
-        print(f"Output directory '{output_dir}' does not exist or is not a directory.")
-        return False
+    # 2) It must be a directory
+    if not p.is_dir():
+        sys.exit(f"ERROR: Output path {p!r} exists but is not a directory.")
 
-    return True
+    #set environment variable to the new path
+    os.environ["OUTPUT_DIR"] = p.resolve()
+    return p
