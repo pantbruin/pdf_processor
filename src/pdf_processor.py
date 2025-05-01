@@ -10,10 +10,8 @@ def extract_pages_from_pdf(master_document, page_num_start, page_num_end):
 
 def save_pdf_file(new_pdf, file_name):
     output_dir = os.getenv("OUTPUT_DIR")
-    os.chdir(output_dir)
-    new_pdf.save(f'{file_name}.pdf')
+    new_pdf.save(f'{output_dir}/{file_name}.pdf')
     new_pdf.close()
-    os.chdir("..")
 
 def process_master_pdf(master_pdf_path):
     """Process the master PDF file and extract individual invoices as separate PDF files."""
@@ -61,23 +59,10 @@ def get_invoice_num_from_page(page):
     
     return invoice_number
 
-def are_environment_variables_set():
-    # Check if the required environment variables are set
-    return os.getenv("INVOICE_DIR") is not None and os.getenv("OUTPUT_DIR") is not None
-
 def main():
-    input_dir = os.getenv("INPUT_DIR")
-    output_dir = os.getenv("OUTPUT_DIR")
-    
-    try:
-        # Attempt to open the PDF file to check if it exists and is valid
-        with pymupdf.open(input_dir) as _:
-            pass
-        os.mkdir(output_dir)
-        process_master_pdf(input_dir)
-    except Exception as e:
-        print(f"Error: {e}")
-        print("Please provide a valid PDF file.")
+    input_path = os.getenv("INPUT_PATH")
+    process_master_pdf(input_path)
+
 
 if __name__ == "__main__":
     main()
