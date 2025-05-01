@@ -1,5 +1,6 @@
 import os
 import sys
+import pymupdf
 
 def are_env_variables_set():
     """
@@ -9,7 +10,7 @@ def are_env_variables_set():
         bool: True if all required environment variables are set, False otherwise.
     """
     required_env_vars = [
-        "INPUT_DIR",
+        "INPUT_PATH",
         "OUTPUT_DIR",
     ]
 
@@ -19,6 +20,27 @@ def are_env_variables_set():
             input("Press the ENTER key to exit...")
             sys.exit(1)
     return True
+
+
+def input_path_is_valid():
+    input_path = os.getenv("INPUT_PATH")
+    # 1) Check that the input path exists and is a file
+    if not os.path.exists(input_path) or not os.path.isfile(input_path):
+        print(f"ERROR: The input path '{input_path}' does not exist or is not a file.")
+        return False
+
+    # 2) Try opening it as a PDF
+    try:
+        doc = pymupdf.open(str(input_path), filetype="pdf")
+        doc.close()
+        return True
+    except Exception:
+            print(f"ERROR: Could not open the input file '{input_path}' as a PDF.")
+            print("Please check the file format and try again.")
+            input("Press the ENTER key to exit...")
+            sys.exit(1)
+
+
 
 
 def are_env_variables_valid():
