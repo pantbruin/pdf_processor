@@ -2,8 +2,9 @@
 setlocal ENABLEDELAYEDEXPANSION
 
 :: ─── 1. ENVIRONMENT VARIABLES ───────────────────────────────────────────────
-set "INPUT_PATH=<input_path>"
-set "OUTPUT_DIR=<output_dir>"
+set "INPUT_PATH=./invoices.pdf"
+REM Final output folder named ProcessedInvoices will automatically be created in specified OUTPUT_DIR
+set "OUTPUT_DIR=<output_path_here>"
 
 REM Launch the EXE
 "%~dp0./pdf_processor.exe" %*

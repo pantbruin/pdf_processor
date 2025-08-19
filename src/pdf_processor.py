@@ -1,5 +1,6 @@
 import pymupdf
 import os
+import ctypes
 
 def extract_pages_from_pdf(input_pdf: pymupdf.Document, page_num_start: int, page_num_end: int) -> pymupdf.Document:
     """
@@ -66,6 +67,7 @@ def get_invoice_num_from_page(page):
 
 def main():
     process_input_pdf()
+    ctypes.windll.user32.MessageBoxW(0, f'Processed invoices saved to directory: {os.getenv("OUTPUT_DIR")}', "Processing Complete", 64)
 
 
 if __name__ == "__main__":

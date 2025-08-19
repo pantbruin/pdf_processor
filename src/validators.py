@@ -56,7 +56,7 @@ def verify_output_path() -> Path:
      Returns a Path object on success or exits the program with an error.
     """
     output_path = os.getenv("OUTPUT_DIR")
-    p = Path(f'{output_path}/ProcessedInvoices/')
+    p = Path(f'{output_path}')
 
     # 1) If it doesn’t exist, try to create it (mkdir -p behavior)
     if not p.exists():
